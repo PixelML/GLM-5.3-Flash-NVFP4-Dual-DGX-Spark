@@ -77,6 +77,27 @@ KV layout. The eighth request queues, increasing TTFT and reducing aggregate
 throughput. Full methodology, functional gates, cold start, and failure notes
 are in [`results/APOLLO-2026-08-27.md`](results/APOLLO-2026-08-27.md).
 
+### Fresh Apollo revalidation
+
+A separate clean pass measured uncached prefill, repeated structural decode,
+and a real OpenCodex repository-agent trace through CLIProxy:
+
+| Workload | Result |
+|---|---:|
+| 1K-token uncached prefill | 1,276.65 input tok/s |
+| 4K-token uncached prefill | 1,371.87 input tok/s |
+| 16K-token uncached prefill | 1,362.75 input tok/s |
+| Single-stream fixed-256 decode | 27.28 output tok/s |
+| Best fresh aggregate, 6 streams | 67.55 output tok/s |
+
+All 103 prefill/decode requests finished by length with zero server-reported
+prefix-cache hits. The OpenCodex task consumed 111,106 input tokens, made a
+coherent multi-step read-only inspection, and returned a 4,002-token repository
+assessment without the punctuation loop observed with Qwen3.8-Flash-Next.
+The full raw methodology, ranges, route gates, and the newly isolated vision
+UMA failure are in
+[`results/APOLLO-2026-08-27-REVALIDATION.md`](results/APOLLO-2026-08-27-REVALIDATION.md).
+
 ## Quickstart
 
 ```bash
@@ -129,7 +150,17 @@ is ready:
 
 The benchmark reports client-observed aggregate output TPS, mean per-stream
 decode TPS excluding TTFT, and mean TTFT. Keep the model, output length,
-thinking mode, and concurrency identical when comparing profiles.
+thinking mode, and concurrency identical when comparing profiles. Vision is
+intentionally opt-in: the 0.84 text-throughput profile has too little UMA
+headroom for a safe first image compile on the Apollo reproduction. Use
+`--include-vision` only after lowering the GPU/KV memory budget and validating
+the Ray memory margin.
+
+Measure uncached prefill separately with unique prefixes:
+
+```bash
+./prefill-benchmark.py --secret-file .vllm-api-key
+```
 
 ## Image
 
@@ -199,6 +230,7 @@ CX7 pins (`HEAD_CX7_IF`, `WORKER_CX7_IF`, `HEAD_CX7_IB`, `WORKER_CX7_IB`) defaul
 | Path | Role |
 |---|---|
 | [`start.sh`](start.sh) | Start / stop / restart / status / logs |
+| [`prefill-benchmark.py`](prefill-benchmark.py) | Unique-prefix uncached prefill benchmark |
 | [`files/build.sh`](files/build.sh) | Build kernel v8 + `mm-ray-v1` if missing |
 | [`files/Dockerfile`](files/Dockerfile) | Kernel layer `glm53-flash-sm121:v8` |
 | [`files/Dockerfile.mm-ray`](files/Dockerfile.mm-ray) | Serving layer (Ray + MM + :8888) |
@@ -210,6 +242,7 @@ CX7 pins (`HEAD_CX7_IF`, `WORKER_CX7_IF`, `HEAD_CX7_IB`, `WORKER_CX7_IB`) defaul
 ## Notes
 
 - **GB10 is UMA.** Weights ~90 GiB per rank; Ray’s default object store would steal RAM from the GPU budget. This recipe uses a 4 GiB Ray object store, `GPU_MEM_UTIL=0.84` (which profiles KV — `--kv-cache-memory` is unset by default), `--enforce-eager`, and `--skip-mm-profiling`. Set `KV_CACHE_MEMORY=<bytes>` only if MTP-4 UMA-OOMs. Do not run another GPU model on either node at the same time.
+- **The max-throughput profile is text-first.** On Apollo, the first 32×32 image request crossed Ray's 95% node-memory threshold by about 6.3 MiB; Ray killed TP0 and vLLM exited. Lower `GPU_MEM_UTIL`/the KV budget before production multimodal use. Do not disable Ray's memory monitor as a first fix.
 - **Tear down both ranks before relaunch.** Leftover Ray/NCCL on either Spark will fight the next start. Use `./start.sh stop` or `./start.sh restart` — not a head-only `docker rm`.
 - **Thinking off:** pass `"chat_template_kwargs": {"enable_thinking": false}` on the chat-completions body.
 - **Local image tag.** `mia/glm53-flash-spark:mm-ray-v1` is built here. Do not `docker pull` that tag from Docker Hub.

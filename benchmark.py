@@ -122,12 +122,17 @@ def preview(value: object, limit: int = 180) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url", default="http://127.0.0.1:8889/v1")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8888/v1")
     parser.add_argument("--model", default="LibertAIDAI/GLM-5.3-Flash-NVFP4")
     parser.add_argument("--secret-file", default=".vllm-api-key")
     parser.add_argument("--concurrency", default="1,2,4,8")
     parser.add_argument("--output-tokens", type=int, default=256)
     parser.add_argument("--bench-only", action="store_true")
+    parser.add_argument(
+        "--include-vision",
+        action="store_true",
+        help="run the opt-in image gate; this needs additional UMA headroom",
+    )
     args = parser.parse_args()
     key = Path(args.secret_file).read_text(encoding="utf-8").strip()
 
@@ -191,19 +196,20 @@ def main() -> None:
         calls = tools["choices"][0]["message"].get("tool_calls", [])
         print(json.dumps({"tool_call_names": [call["function"]["name"] for call in calls]}))
 
-        vision, _ = chat(args.base_url, key, {
-            "model": args.model,
-            "messages": [{"role": "user", "content": [
-                {"type": "text", "text": "What is the dominant color? One word."},
-                {"type": "image_url", "image_url": {"url": red_png()}},
-            ]}],
-            "max_tokens": 128,
-            "temperature": 0,
-            "reasoning_effort": "low",
-        })
-        print(json.dumps({
-            "vision": preview(vision["choices"][0]["message"].get("content"))
-        }))
+        if args.include_vision:
+            vision, _ = chat(args.base_url, key, {
+                "model": args.model,
+                "messages": [{"role": "user", "content": [
+                    {"type": "text", "text": "What is the dominant color? One word."},
+                    {"type": "image_url", "image_url": {"url": red_png()}},
+                ]}],
+                "max_tokens": 128,
+                "temperature": 0,
+                "reasoning_effort": "low",
+            })
+            print(json.dumps({
+                "vision": preview(vision["choices"][0]["message"].get("content"))
+            }))
 
     for concurrency in (int(value) for value in args.concurrency.split(",")):
         print(json.dumps({"benchmark": benchmark(
