@@ -540,7 +540,10 @@ launch_cluster() {
     # optional extra passthrough
     local worker_passthru="" v val
     local -a head_env=()
-    for v in HF_HUB_OFFLINE; do
+    # VLLM_API_KEY is the standard vLLM authentication environment variable.
+    # Passing it through avoids placing the secret in EXTRA_ARGS, generated
+    # launcher text, process arguments, or startup logs.
+    for v in HF_HUB_OFFLINE VLLM_API_KEY; do
         val="${!v:-}"
         if [ -n "$val" ]; then
             head_env+=(-e "$v=$val")

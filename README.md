@@ -56,10 +56,33 @@ On this recipe (SM90 NoPE + FA2, marlin, MTP-4, fp8_e4m3 KV, 262k, eager). Concu
 
 † warm
 
+### PixelML Apollo validation
+
+PixelML independently reproduced this recipe on a separate two-Spark cluster
+at model revision `11d73216cd636238e82e1d77fe1042ffab36e7fa` and upstream
+recipe commit `aed98a1`. Three warm, low-reasoning, fixed-256-token runs per
+row measured the following client-observed aggregate output throughput:
+
+| Concurrency | Median agg tok/s | Warm range | Median TTFT |
+|---|---:|---:|---:|
+| ×1 | 26.55 | 24.10–27.00 | 0.432s |
+| ×2 | 43.19 | 42.64–44.50 | 0.538s |
+| ×4 | 58.36 | 51.74–58.47 | 0.481s |
+| ×6 | 80.57 | 79.58–93.83 | 0.560s |
+| ×7 | **82.12** | 72.77–84.84 | 0.499s |
+| ×8 | 69.85 | 69.50–73.63 | 2.908s |
+
+Seven streams are the effective no-queue sweet spot for the validated 8.5-GiB
+KV layout. The eighth request queues, increasing TTFT and reducing aggregate
+throughput. Full methodology, functional gates, cold start, and failure notes
+are in [`results/APOLLO-2026-08-27.md`](results/APOLLO-2026-08-27.md).
+
 ## Quickstart
 
 ```bash
-./start.sh
+umask 077
+openssl rand -hex 32 > .vllm-api-key
+VLLM_API_KEY="$(<.vllm-api-key)" ./start.sh
 ```
 
 First run: build/ship the local image if missing → download ~181 GiB into the HF cache → refresh `chat_template.jinja` from Hugging Face (`emit_image` / `emit_video`) → rsync weights to the worker → Ray worker on spark2, Ray head + `vllm serve` on spark1 → poll `/health` up to **3600s** (320B MoE init is slow).
@@ -82,14 +105,31 @@ Ctrl-C during the wait detaches; the cluster keeps running. Default is not to ta
 
 ```bash
 curl -s http://127.0.0.1:8888/v1/chat/completions \
+  -H "Authorization: Bearer $(<.vllm-api-key)" \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "LibertAIDAI/GLM-5.3-Flash-NVFP4",
-    "messages": [{"role": "user", "content": "hello!"}]
+    "messages": [{"role": "user", "content": "hello!"}],
+    "reasoning_effort": "low"
   }'
 ```
 
-Image + video use standard OpenAI multimodal content parts (`image_url` / `video_url`). Turn thinking off per request with `chat_template_kwargs` (see [Notes](#notes)).
+Image + video use standard OpenAI multimodal content parts (`image_url` /
+`video_url`). This checkpoint's refreshed chat template accepts the top-level
+OpenAI-compatible `reasoning_effort` field with `low`, `high`, or `max`.
+`low` is the direct-answer/coding profile; `high` and `max` expose reasoning in
+vLLM's `message.reasoning` field before the final `message.content`.
+
+Run the functional gates and fixed-output concurrency benchmark after the API
+is ready:
+
+```bash
+./benchmark.py --secret-file .vllm-api-key --concurrency 1,2,4,8
+```
+
+The benchmark reports client-observed aggregate output TPS, mean per-stream
+decode TPS excluding TTFT, and mean TTFT. Keep the model, output length,
+thinking mode, and concurrency identical when comparing profiles.
 
 ## Image
 
@@ -125,6 +165,7 @@ All optional. Defaults match a working 2× Spark + CX7 + Portainer-on-8000 kit.
 |---|---|---|
 | `IMAGE` | `mia/glm53-flash-spark:mm-ray-v1` | Serving image |
 | `PORT` | `8888` | OpenAI API on the head (8000 is Portainer) |
+| `VLLM_API_KEY` | *(unset)* | Protect OpenAI-compatible `/v1` routes; passed as an environment variable so the secret is not written into generated commands or logs |
 | `MOE_BACKEND` | `marlin` | `marlin` (default) · `native` · `auto` (native, then marlin on `cudaErrorNoKernelImageForDevice`) |
 | `MTP_TOKENS` | `4` | MTP speculative tokens (`0` disables) |
 | `MAX_MODEL_LEN` | `262144` | Context; model is 1M-native (`1048576` if you need it) |

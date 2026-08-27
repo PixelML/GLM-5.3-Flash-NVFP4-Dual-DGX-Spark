@@ -16,6 +16,7 @@ credentials.json
 id_rsa
 id_ed25519
 *.secret
+.vllm-api-key
 
 # Hugging Face weights and cache (never commit checkpoints)
 .cache/
