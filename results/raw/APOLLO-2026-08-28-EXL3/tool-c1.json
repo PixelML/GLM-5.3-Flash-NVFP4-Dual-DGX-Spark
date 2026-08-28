@@ -1,0 +1,78 @@
+{
+  "concurrency": 1,
+  "failed": 0,
+  "filler_words_on_first_request": 0,
+  "passed": 3,
+  "records": [
+    {
+      "argument_failures": [],
+      "missing_calls": [],
+      "ok": true,
+      "prompt_tokens": 247,
+      "request_id": 0,
+      "tool_calls": [
+        {
+          "arguments": {
+            "command": "pwd"
+          },
+          "name": "terminal_execute"
+        },
+        {
+          "arguments": {
+            "command": "open",
+            "url": "https://example.com"
+          },
+          "name": "browser_action"
+        }
+      ],
+      "wall_s": 1.9317553889704868
+    },
+    {
+      "argument_failures": [],
+      "missing_calls": [],
+      "ok": true,
+      "prompt_tokens": 247,
+      "request_id": 1,
+      "tool_calls": [
+        {
+          "arguments": {
+            "command": "pwd"
+          },
+          "name": "terminal_execute"
+        },
+        {
+          "arguments": {
+            "command": "open",
+            "url": "https://example.com"
+          },
+          "name": "browser_action"
+        }
+      ],
+      "wall_s": 1.4963589670369402
+    },
+    {
+      "argument_failures": [],
+      "missing_calls": [],
+      "ok": true,
+      "prompt_tokens": 247,
+      "request_id": 2,
+      "tool_calls": [
+        {
+          "arguments": {
+            "command": "pwd"
+          },
+          "name": "terminal_execute"
+        },
+        {
+          "arguments": {
+            "command": "open",
+            "url": "https://example.com"
+          },
+          "name": "browser_action"
+        }
+      ],
+      "wall_s": 1.399067698046565
+    }
+  ],
+  "rounds": 3
+}

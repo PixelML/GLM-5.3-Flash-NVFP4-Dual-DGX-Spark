@@ -1,0 +1,3 @@
+{"run_seed": 1787944830024967717, "prefix_cache_policy": "unique-prefix"}
+{"samples": [{"prompt_tokens": 299527, "ttft_seconds": 367.1046, "client_prefill_tps": 815.92}]}
+{"summary": {"target_prompt_tokens": 300000, "median_prompt_tokens": 299527, "median_ttft_seconds": 367.1046, "median_client_prefill_tps": 815.92, "client_prefill_tps_range": [815.92, 815.92]}}

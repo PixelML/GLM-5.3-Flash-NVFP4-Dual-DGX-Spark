@@ -1,0 +1,26 @@
+{
+  "max_tokens": 400,
+  "model": "apollo-glm-5.3-flash",
+  "results": {
+    "1": {
+      "aggregate_tps": 58.791319820713454,
+      "draft_acceptance": 0.9640552995391705,
+      "failures": 0,
+      "mean_e2e_tps": 58.847390710559466,
+      "mean_stream_decode_tps": 63.39118864521577,
+      "mean_ttft_s": 0.5033192487511163,
+      "requests": 3
+    },
+    "4": {
+      "aggregate_tps": 154.86473028370713,
+      "draft_acceptance": 0.9584957578537033,
+      "failures": 0,
+      "mean_e2e_tps": 39.046756565558205,
+      "mean_stream_decode_tps": 41.65565650612367,
+      "mean_ttft_s": 0.666689445177326,
+      "requests": 12
+    }
+  },
+  "rounds": 3,
+  "workload": "structured"
+}

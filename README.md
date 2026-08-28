@@ -59,6 +59,32 @@ Full methodology, cold start, gateway gates, and caveats are in
 > The DFlash2 draft is CC BY-NC-ND 4.0. This profile is non-commercial
 > evaluation only; it is not a drop-in replacement for the base MTP profile.
 
+### EXL3 + DFlash2 evaluation profile
+
+[`exl3/`](exl3/README.md) vendors MiaAI's GB10 EXL3/TR3 overlay at audited
+commit `bd7f55e` and adds Apollo's exact direct-CX7 configuration, immutable
+image/model pins, secret-file API authentication, comparable concurrency and
+prefill harnesses, a 300K stress path, and multimodal/tool-call gates. The
+independent Apollo receipt is
+[`results/APOLLO-2026-08-28-EXL3-DFLASH2.md`](results/APOLLO-2026-08-28-EXL3-DFLASH2.md).
+
+Apollo measured **66.30 decode tok/s** for the source-shaped single-stream
+structured test and **154.86 aggregate tok/s** at four structured streams.
+Code-only reached 49.60 stream tok/s; planning-heavy coding reached 27.50.
+Uncached prefill measured 702–795 input tok/s from 1K–16K, and a 299,527-token
+stress request passed at 815.92 input tok/s with zero restarts or OOMs. The
+required-argument tool, image, video, CLIProxy, and OpenCodex route gates all
+passed. See the receipt for protocol details and the prompt-shape caveat.
+
+This lane is not an NVFP4 variant: routed experts are EXL3/TR3 4 bpw, the
+target sparse-MLA KV cache is FP8, and DFlash2 still uses its separate BF16
+draft. Do not compare structured counting tok/s with planning-heavy coding;
+the draft acceptance regime is different.
+
+> The EXL3 checkpoint is ShapleyMCG License 1.0 source-available, while the
+> DFlash2 draft is CC BY-NC-ND 4.0. Review both before deployment; the DFlash2
+> profile is evaluation-only.
+
 On this recipe (SM90 NoPE + FA2, marlin, MTP-4, fp8_e4m3 KV, 262k, eager). Concurrent streams = `--max-num-seqs` class.
 
 | Concurrency | agg tok/s | tok/s/stream | TTFT |

@@ -1,0 +1,28 @@
+{
+  "code": {
+    "content": "```python\ndef is_balanced(text: str) -> bool:\n    \"\"\"\n    Check whether all parentheses in `text` are balanced.\n\n    Supports (), [], and {}. Non-bracket characters are ignored.\n    \"\"\"\n    pairs = {')': '(', ']': '[', '}': '{'}\n    stack = []\n    for ch in text:\n        if ch in '([{':\n            stack.append(ch)\n        elif ch in pairs:\n            if not stack or stack.pop() != pairs[ch]:\n                return False\n    return not stack\n\n\nassert is_balanced(\"a(b[c]{d}e)f\") is True\nassert is_balanced(\"([)]\") is False\nassert is_balanced(\"(((\") is False\nassert is_balanced(\"\") is True\n```",
+    "finish_reason": "stop",
+    "passed": true,
+    "repetition_loop": null,
+    "usage": {
+      "completion_tokens": 157,
+      "prompt_tokens": 35,
+      "prompt_tokens_details": null,
+      "total_tokens": 192
+    },
+    "wall_s": 4.401504156994633
+  },
+  "exact": {
+    "content": "GLM_EXL3_OK",
+    "finish_reason": "stop",
+    "passed": true,
+    "usage": {
+      "completion_tokens": 7,
+      "prompt_tokens": 15,
+      "prompt_tokens_details": null,
+      "total_tokens": 22
+    },
+    "wall_s": 0.3552914249012247
+  },
+  "passed": true
+}
