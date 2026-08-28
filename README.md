@@ -7,7 +7,7 @@
   <a href="https://x.com/MiaAI_lab" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 8px;vertical-align:middle;"><img src="https://img.shields.io/badge/Follow%20me%20on%20X-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow Mia on X" height="28" style="height:28px;width:auto;vertical-align:middle;border:0;" /></a>
 </p>
 
-Serve the **[LibertAIDAI/GLM-5.3-Flash-NVFP4](https://huggingface.co/LibertAIDAI/GLM-5.3-Flash-NVFP4)** checkpoint on a **2× DGX Spark** kit: multimodal image+video, Ray tensor-parallel 2, OpenAI API on **:8888**. One command (`./start.sh`) builds the local serving image if needed, syncs weights, stands up the Ray cluster over CX7, and waits for `/health`.
+Serve the **[LibertAIDAI/GLM-5.3-Flash-NVFP4](https://huggingface.co/LibertAIDAI/GLM-5.3-Flash-NVFP4)** checkpoint on a **2× DGX Spark** kit. The repository includes the production-oriented multimodal MTP/Ray profile on **:8888** and a separately licensed [DFlash2 evaluation profile](dflash2/README.md) on **:8889**.
 
 ## Hardware / topology
 
@@ -43,6 +43,21 @@ Both containers run `--network host --ipc=host`. Ray may use the `10.0.0.1`/`10.
 Model name on the wire: `LibertAIDAI/GLM-5.3-Flash-NVFP4`.
 
 ## Structural decode tok/s
+
+### DFlash2 evaluation profile
+
+PixelML independently reproduced the public vLLM DFlash2 SM121 port on Apollo.
+At single-stream temperature 0 it measured **61.34 decode tok/s** for structured
+counting (91.0% draft acceptance), **42.55 tok/s** for code-only output (61.1%
+acceptance), and **25.28 tok/s** for planning-heavy coding (30.7% acceptance).
+The same endpoint delivered 1.31K–1.40K uncached input tok/s from 1K–16K.
+
+Use [`dflash2/`](dflash2/README.md) for the pinned image and two-node launcher.
+Full methodology, cold start, gateway gates, and caveats are in
+[`results/APOLLO-2026-08-28-DFLASH2.md`](results/APOLLO-2026-08-28-DFLASH2.md).
+
+> The DFlash2 draft is CC BY-NC-ND 4.0. This profile is non-commercial
+> evaluation only; it is not a drop-in replacement for the base MTP profile.
 
 On this recipe (SM90 NoPE + FA2, marlin, MTP-4, fp8_e4m3 KV, 262k, eager). Concurrent streams = `--max-num-seqs` class.
 
