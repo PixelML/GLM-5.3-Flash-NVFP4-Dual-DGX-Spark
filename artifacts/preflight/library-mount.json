@@ -1,0 +1,10 @@
+{
+   "filesystems": [
+      {
+         "target": "/library",
+         "source": "192.168.2.18:/library",
+         "fstype": "nfs4",
+         "options": "rw,noatime,vers=4.2,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,nconnect=8,timeo=600,retrans=2,sec=sys,clientaddr=192.168.2.40,local_lock=none,addr=192.168.2.18"
+      }
+   ]
+}

@@ -1,0 +1,17 @@
+checkpoint: cyankiwi/GLM-5.3-Flash-AWQ-INT4 (sha 3999f9bf2c3e3064790af5a2d12d19090fc97f4d)
+safetensors shards: 43
+exact weight bytes: 212721952636
+GB (10^9): 212.7   GiB (2^30): 198.1
+
+TP=3 fit on 3x CMP 170HX (64 GiB each, 192 GiB total):
+weights per GPU (TP3): 66.0 GiB  vs 64.0 GiB physical
+headroom per GPU for ctx+KV+CUDA ctx: -2.04 GiB -> NEGATIVE margin
+
+verdict: packed INT4 weights alone exceed per-GPU VRAM at TP=3;
+no KV/activation budget remains. Unusable on 3x CMP 170HX.
+
+Even PP=3 fails: pipeline splits are layer-wise, not weight-proportional;
+first stage still exceeds 64 GiB once embedding + first layers land.
+
+Cross-check: 43 shards from live HF API (39x ~4767 MB + 2763 MB + 4640 MB tail)
+recomputes to 198.1 GiB. Consistent across probes.
